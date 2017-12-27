@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "327468473024",
+    "firebase_url": "https://helloworld-c8227.firebaseio.com",
+    "project_id": "helloworld-c8227",
+    "storage_bucket": "helloworld-c8227.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:327468473024:android:514e5203e3e5a07a",
+        "android_client_info": {
+          "package_name": "com.example.liav.map3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "327468473024-3e2r4eerlaakapaiv5207gfm4mgqensf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.liav.map3",
+            "certificate_hash": "f3ed1dbc5117e1a2ab42ad695bcea1490bfce2d7"
+          }
+        },
+        {
+          "client_id": "327468473024-f8fo30n04683q2kli3va4qa9ak4lj4cd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcSac7_LY2XcVQWSSRtLMc0yzMQ2hh8RI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "327468473024-f8fo30n04683q2kli3va4qa9ak4lj4cd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
