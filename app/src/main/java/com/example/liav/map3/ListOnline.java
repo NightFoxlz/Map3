@@ -56,6 +56,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
 
+
     private static int UPDATE_INTERVAL = 5000;
     private static int FASTEST_INTERVAL = 3000;
     private static int DISTANCE = 5;

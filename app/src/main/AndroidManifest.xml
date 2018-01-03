@@ -43,6 +43,10 @@
         <activity
             android:name=".EmailPasswordActivity"
             android:label="@string/title_activity_email_password"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".ChooseRun"
+            android:label="@string/title_activity_choose_run"
             android:theme="@style/AppTheme"></activity>
     </application>
 
