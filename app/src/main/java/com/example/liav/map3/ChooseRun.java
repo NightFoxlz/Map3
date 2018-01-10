@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.liav.map3.Model.Route;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -41,8 +42,12 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -54,7 +59,17 @@ public class ChooseRun extends AppCompatActivity {
     private TextView langTxt;
     private TextView latTxt;
 
-    List<LatLng> locationsList;
+    private  List<Location> locationsList;
+
+    private DatabaseReference Routes, currUserRoutes, currRoute;
+
+    private String routeUID;
+
+    private Date startDate, endDate;
+
+    private float distance;
+
+    private Location curr, prev;
 
     private Boolean mRequestingLocationUpdates; //////////////////////////////////////////////////
 
@@ -110,8 +125,12 @@ public class ChooseRun extends AppCompatActivity {
         stopButton.setVisibility(View.INVISIBLE);
         stopButton.setEnabled(false);
 
+        Routes = FirebaseDatabase.getInstance().getReference("Routes");
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
+
+        locationsList = new ArrayList<Location>();
 
         createLocationCallback();
         createLocationRequest();
@@ -131,6 +150,11 @@ public class ChooseRun extends AppCompatActivity {
             public void onClick(View view) {
                 //Intent intent = new Intent(ChooseRun.this,ListOnline.class);
                 //startActivity(intent);
+                locationsList.clear();
+                currUserRoutes = Routes.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                currRoute = currUserRoutes.push();
+                routeUID = currRoute.getKey();
+                distance = 0;
                 stopButton.setVisibility(View.VISIBLE);
                 stopButton.setEnabled(true);
                 runingButton.setVisibility(View.INVISIBLE);
@@ -146,6 +170,7 @@ public class ChooseRun extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 stopLocationUpdates();
+                currRoute.setValue(new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,locationsList));
                 mRequestingLocationUpdates = false;
             }
         });
@@ -235,8 +260,22 @@ public class ChooseRun extends AppCompatActivity {
                 super.onLocationResult(locationResult);
 
                 mCurrentLocation = locationResult.getLastLocation();
+                if (locationsList.isEmpty()){
+                    startDate = new Date();
+                    prev = new Location("");
+                    prev.setLatitude(mCurrentLocation.getLatitude());
+                    prev.setLongitude(mCurrentLocation.getLongitude());
+                }
+                else endDate = new Date();
+
+                curr = new Location("");
+                curr.setLatitude(mCurrentLocation.getLatitude());
+                curr.setLongitude(mCurrentLocation.getLongitude());
+                locationsList.add(curr);
+                distance += prev.distanceTo(curr);
+                prev = curr;
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                Toast.makeText(ChooseRun.this,"Location Callback" + count++, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChooseRun.this,"Location Callback " + count++, Toast.LENGTH_SHORT).show();
                 updateUI();
             }
         };
