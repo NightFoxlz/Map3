@@ -50,6 +50,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.lang.Math;
 
 public class ChooseRun extends AppCompatActivity {
 
@@ -70,6 +71,8 @@ public class ChooseRun extends AppCompatActivity {
     private float distance;
 
     private Location curr, prev;
+
+    private Location point1, point2,point3;
 
     private Boolean mRequestingLocationUpdates; //////////////////////////////////////////////////
 
@@ -97,7 +100,7 @@ public class ChooseRun extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private int count  = 1;
+    private int count, skiped;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +153,8 @@ public class ChooseRun extends AppCompatActivity {
             public void onClick(View view) {
                 //Intent intent = new Intent(ChooseRun.this,ListOnline.class);
                 //startActivity(intent);
+                count =1; skiped = 0;
+                point1 = null; point2 = null; point3 = null;
                 locationsList.clear();
                 currUserRoutes = Routes.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
                 currRoute = currUserRoutes.push();
@@ -169,7 +174,13 @@ public class ChooseRun extends AppCompatActivity {
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                runingButton.setVisibility(View.VISIBLE);
+                runingButton.setEnabled(true);
+                stopButton.setVisibility(View.INVISIBLE);
+                stopButton.setEnabled(false);
                 stopLocationUpdates();
+                if (point2 != null) locationsList.add(point2);
+                Toast.makeText(ChooseRun.this,"Skipped " + skiped + " out of " + count, Toast.LENGTH_SHORT).show();
                 currRoute.setValue(new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,locationsList));
                 mRequestingLocationUpdates = false;
             }
@@ -240,10 +251,6 @@ public class ChooseRun extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        runingButton.setVisibility(View.VISIBLE);
-                        runingButton.setEnabled(true);
-                        stopButton.setVisibility(View.INVISIBLE);
-                        stopButton.setEnabled(false);
                         mRequestingLocationUpdates = false;
                     }
                 });
@@ -271,14 +278,50 @@ public class ChooseRun extends AppCompatActivity {
                 curr = new Location("");
                 curr.setLatitude(mCurrentLocation.getLatitude());
                 curr.setLongitude(mCurrentLocation.getLongitude());
-                locationsList.add(curr);
+                if (point1 == null){
+                    point1 = curr;
+                    locationsList.add(curr);
+                    Toast.makeText(ChooseRun.this,"Location Callback point 1 is null " + count, Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    if (point2 == null){
+                        point2 = curr;
+                        Toast.makeText(ChooseRun.this,"Location Callback point 2 is null " + count, Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        point3 = curr;
+                        if (calc_degre() < 160){
+                            locationsList.add(point2);
+                            point1 = point2;
+                            point2 = point3;
+                            point3 = null;
+                            Toast.makeText(ChooseRun.this,"Location Callback " + count, Toast.LENGTH_SHORT).show();
+                        }
+                        else{
+                            point2 = point3;
+                            point3 = null;
+                            skiped++;
+                            Toast.makeText(ChooseRun.this,"Location Callback Skipped " + skiped, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                count++;
                 distance += prev.distanceTo(curr);
                 prev = curr;
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                Toast.makeText(ChooseRun.this,"Location Callback " + count++, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(ChooseRun.this,"Location Callback " + count++, Toast.LENGTH_SHORT).show();
                 updateUI();
             }
         };
+    }
+
+    private double calc_degre() {
+        double length1, length2,skalar;
+        length1 = Math.sqrt((Math.pow(point2.getLongitude()-point1.getLongitude(),2))+(Math.pow(point2.getLatitude()-point1.getLatitude(),2)));
+        length2 = Math.sqrt((Math.pow(point3.getLongitude()-point2.getLongitude(),2))+(Math.pow(point3.getLatitude()-point2.getLatitude(),2)));
+        skalar = (point1.getLongitude()-point2.getLongitude())*(point3.getLongitude()-point2.getLongitude())+
+                (point1.getLatitude()-point2.getLatitude())*(point3.getLatitude()-point2.getLatitude());
+        return Math.toDegrees(Math.acos(skalar/(length1*length2)));
     }
 
     private void updateUI() {
