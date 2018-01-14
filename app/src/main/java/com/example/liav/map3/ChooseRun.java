@@ -216,6 +216,7 @@ public class ChooseRun extends AppCompatActivity {
                         updateUI();
                     }
                 })
+
                 .addOnFailureListener(this, new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
@@ -246,6 +247,7 @@ public class ChooseRun extends AppCompatActivity {
                 });
     }
 
+    
     private void stopLocationUpdates(){
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
