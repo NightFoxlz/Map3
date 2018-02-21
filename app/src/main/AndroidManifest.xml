@@ -47,7 +47,8 @@
         <activity
             android:name=".ChooseRun"
             android:label="@string/title_activity_choose_run"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
+        <activity android:name=".ShowMyRouts"></activity>
     </application>
 
 </manifest>

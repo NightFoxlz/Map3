@@ -4,8 +4,8 @@ import android.graphics.Color;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 
+import com.example.liav.map3.Model.Route;
 import com.example.liav.map3.Model.Tracking;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -24,22 +24,20 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 
 public class MapTracking extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private Route curr_route;
 
-    private String email;
-
+    private String userUID, routUID, email;
 
     DatabaseReference locations;
 
     Double lat, lng;
-    //for debuging
-    List<LatLng> list;
 
 
 
@@ -61,40 +59,62 @@ public class MapTracking extends FragmentActivity implements OnMapReadyCallback 
         // Ref to firebase first
         locations = FirebaseDatabase.getInstance().getReference("Locations");
 
-
         //Get Intent
         if (getIntent() != null)
         {
-            email = getIntent().getStringExtra("email");
-            lat = getIntent().getDoubleExtra("lat",0);
-            lng = getIntent().getDoubleExtra("lng",0);
+            userUID = getIntent().getStringExtra("userUID");
+            routUID = getIntent().getStringExtra("routUID");
         }
-        if (!TextUtils.isEmpty(email))
-            loadLocationForThisUser(email);
+        //if (!TextUtils.isEmpty(email))
+        //    loadLocationForThisUser(email);
 
-        list = new ArrayList<LatLng>();
-        LatLng hi1 = new LatLng(32.3,33.4);
-        LatLng hi2 = new LatLng(33.1,34.4);
-        list.add(hi1);
-        list.add(hi2);
 
 
     }
-    private void addLines(List<LatLng> cordinations){
-        if (cordinations.size()>=2){
-            Iterator<LatLng> iter = cordinations.iterator();
-            LatLng prv = iter.next();
+
+    public void drawRoute(String userID, String routeID){
+
+        DatabaseReference routeRef= FirebaseDatabase.getInstance().getReference().child("Routes").child(userID);
+        Query a=routeRef.orderByChild("uid").equalTo(routeID);
+        a.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
+                    curr_route = singleSnapshot.getValue(Route.class);
+                }
+                addLines(curr_route.locationList());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+    }
+    private void addLines(List< Location> coordination){
+        if (coordination.size()>=2){
+            Iterator<Location> iter = coordination.iterator();
+            Location prv = iter.next();
+            LatLng prev_latlng= new LatLng(prv.getLatitude(),prv.getLongitude());
             while (iter.hasNext()) {
-                LatLng curr = iter.next();
-                mMap.addPolyline(new PolylineOptions().add(prv,curr).width(5).color(Color.BLUE).geodesic(true));
-                prv = curr;
+                Location curr = iter.next();
+                LatLng curr_latlng= new LatLng(curr.getLatitude(),curr.getLongitude());
+                mMap.addPolyline(new PolylineOptions().add(prev_latlng,curr_latlng).width(5).color(Color.BLUE).geodesic(true));
+                prev_latlng = curr_latlng;
             }
             //trying to focus map on the track
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prv,13));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prev_latlng,13));
         }
 
 
     }
+
+
     private void loadLocationForThisUser(String email) {
         Query user_location = locations.orderByChild("email").equalTo(email);
 
@@ -135,8 +155,8 @@ public class MapTracking extends FragmentActivity implements OnMapReadyCallback 
 
                 //for debuging
 
-            //    list.add(new LatLng(34,32));
-              //  list.add(new LatLng(33 , 35));
+                //    list.add(new LatLng(34,32));
+                //  list.add(new LatLng(33 , 35));
                 //addLines(list);
 
 
@@ -184,8 +204,7 @@ public class MapTracking extends FragmentActivity implements OnMapReadyCallback 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        addLines(list);
-
+        drawRoute(userUID,routUID);
 
     }
 }

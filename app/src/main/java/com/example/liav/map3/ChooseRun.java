@@ -1,6 +1,5 @@
 package com.example.liav.map3;
 
-import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -25,10 +23,8 @@ import android.widget.Toast;
 
 import com.example.liav.map3.Model.Route;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -37,7 +33,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -181,8 +176,19 @@ public class ChooseRun extends AppCompatActivity {
                 stopLocationUpdates();
                 if (point2 != null) locationsList.add(point2);
                 Toast.makeText(ChooseRun.this,"Skipped " + skiped + " out of " + count, Toast.LENGTH_SHORT).show();
-                currRoute.setValue(new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,locationsList));
+                List<Double> lat = new ArrayList<Double>();
+                List<Double> lon = new ArrayList<Double>();
+                for (int i=0; i<locationsList.size(); i++){ //locationsList is a list of Location
+                    lat.add(locationsList.get(i).getLatitude());
+                    lon.add(locationsList.get(i).getLongitude());
+                }
+                Route temp = new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,lat,lon);
+                currRoute.setValue(temp); //currRoute is a database reference
                 mRequestingLocationUpdates = false;
+                Intent map = new Intent ( ChooseRun.this,MapTracking.class);
+                map.putExtra("userUID",FirebaseAuth.getInstance().getCurrentUser().getUid());
+                map.putExtra("routUID",routeUID);
+                startActivity(map);
             }
         });
 
@@ -247,7 +253,7 @@ public class ChooseRun extends AppCompatActivity {
                 });
     }
 
-    
+
     private void stopLocationUpdates(){
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
@@ -271,6 +277,7 @@ public class ChooseRun extends AppCompatActivity {
                 mCurrentLocation = locationResult.getLastLocation();
                 if (locationsList.isEmpty()){
                     startDate = new Date();
+                    endDate = new Date();
                     prev = new Location("");
                     prev.setLatitude(mCurrentLocation.getLatitude());
                     prev.setLongitude(mCurrentLocation.getLongitude());
