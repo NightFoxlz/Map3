@@ -5,6 +5,7 @@ import android.location.Location;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,29 +18,35 @@ public class Route {
     private float distance;
     private List<Double> latitudeList;
     private List<Double> longitudeList;
+    private Date date;
 
     public Route(){}
 
-    public Route (Route r){
+/*    public Route (Route r){
         this.uid = r.uid;
         this.routeTime = r.routeTime;
         this.distance = r.distance;
         this.latitudeList = r.latitudeList;
         this.longitudeList = r.longitudeList;
-    }
+    }*/
 
-    public Route (String id ,long time, float distance, List<Double> lat,List<Double> lon){
+    public Route (String id ,long time, float distance, List<Double> lat,List<Double> lon, Date date){
         this.uid=id;
         this.routeTime=time;
         this.distance=distance;
         this.latitudeList=lat;
         this.longitudeList=lon;
+        this.date = date;
       //  for (int i=0; i < cord.size(); i++){
         //    Location temp = cord.get(i);
         //    this.lat.add(temp.getLatitude());
         //    this.lan.add(temp.getLongitude());
        // }
     }
+
+    public Date getDate() { return date; }
+
+    public void setDate (Date date) { this.date = date; }
 
     public String getUid(){
         return uid;

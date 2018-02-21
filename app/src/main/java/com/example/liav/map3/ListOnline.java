@@ -202,7 +202,6 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
             @Override
             protected void populateViewHolder(ListOnlineViewHolder viewHolder, final User model, int position) {
                 viewHolder.txtEmail.setText(model.getEmail());
-
                 //We need to implement item click of recyler view
                 viewHolder.itemClickListenener = new ItemClickListenener() {
                     @Override

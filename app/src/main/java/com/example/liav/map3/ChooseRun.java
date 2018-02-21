@@ -49,8 +49,7 @@ import java.lang.Math;
 
 public class ChooseRun extends AppCompatActivity {
 
-    private Button runingButton;
-    private Button stopButton;
+    private Button runingButton , stopButton , showRoutes;
 
     private TextView langTxt;
     private TextView latTxt;
@@ -115,6 +114,7 @@ public class ChooseRun extends AppCompatActivity {
 
         runingButton = findViewById(R.id.runButton);
         stopButton = findViewById(R.id.stopButton);
+        showRoutes = findViewById(R.id.ShowRoutes);
         langTxt = findViewById(R.id.langT);
         latTxt = findViewById(R.id.latT);
 
@@ -182,13 +182,21 @@ public class ChooseRun extends AppCompatActivity {
                     lat.add(locationsList.get(i).getLatitude());
                     lon.add(locationsList.get(i).getLongitude());
                 }
-                Route temp = new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,lat,lon);
+                Route temp = new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,lat,lon, new Date());
                 currRoute.setValue(temp); //currRoute is a database reference
                 mRequestingLocationUpdates = false;
                 Intent map = new Intent ( ChooseRun.this,MapTracking.class);
                 map.putExtra("userUID",FirebaseAuth.getInstance().getCurrentUser().getUid());
                 map.putExtra("routUID",routeUID);
                 startActivity(map);
+            }
+        });
+
+        showRoutes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent showRout = new Intent ( ChooseRun.this,ShowMyRouts.class);
+                startActivity(showRout);
             }
         });
 

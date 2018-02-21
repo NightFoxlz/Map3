@@ -21,6 +21,8 @@ public class ListOnlineViewHolder extends RecyclerView.ViewHolder implements Vie
         this.itemClickListenener = itemClickListener;
     }
 
+    public void tryAsq() {}
+
 
     @Override
     public void onClick(View view) {
