@@ -59,7 +59,7 @@ public class ShowMyRouts extends AppCompatActivity {
             @Override
             protected void populateViewHolder(ShowMyRoutsViewHolder viewHolder, final Route model, int position) {
                 viewHolder.date.setText(model.getDate().toString());
-                viewHolder.dist.setText(Float.toString(model.getDistance()) + " km");
+                viewHolder.dist.setText(Float.toString(model.getDistance()) + " m");
                 long secLong = model.getRouteTime();
                 int min = (int)secLong/60;
                 int sec = (int)secLong - min*60;

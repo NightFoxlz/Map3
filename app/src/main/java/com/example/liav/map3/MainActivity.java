@@ -1,6 +1,7 @@
 package com.example.liav.map3;
 
 import android.content.Intent;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
+    ConstraintLayout layout;
     Button btnLogin;
     private  final static int LOGIN_PERMISSION = 1000;
     @Override
@@ -24,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
         //List<AuthUI.IdpConfig> providers = Arrays.asList(
          //       new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build());
 
+
+        layout = findViewById(R.id.activ_main);
+        layout.setBackgroundResource(R.drawable.runbackground);
 
         btnLogin = findViewById(R.id.btnSignIn);
  //       regButton = findViewById(R.id.reg_bttn);
