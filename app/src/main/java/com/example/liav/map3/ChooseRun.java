@@ -1,10 +1,12 @@
 package com.example.liav.map3;
 
 import android.Manifest;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,8 +18,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,9 +54,6 @@ import java.lang.Math;
 public class ChooseRun extends AppCompatActivity {
 
     private Button runingButton , stopButton , showRoutes;
-
-    private TextView langTxt;
-    private TextView latTxt;
 
     private  List<Location> locationsList;
 
@@ -111,12 +112,10 @@ public class ChooseRun extends AppCompatActivity {
          //               .setAction("Action", null).show();
          //   }
         //});
-
+        setTitle ("Main Area");
         runingButton = findViewById(R.id.runButton);
         stopButton = findViewById(R.id.stopButton);
         showRoutes = findViewById(R.id.ShowRoutes);
-        langTxt = findViewById(R.id.langT);
-        latTxt = findViewById(R.id.latT);
 
         mRequestingLocationUpdates = false;
 
@@ -156,6 +155,8 @@ public class ChooseRun extends AppCompatActivity {
                 routeUID = currRoute.getKey();
                 distance = 0;
                 stopButton.setVisibility(View.VISIBLE);
+                //findViewById(R.id.enable_run_button).setVisibility(View.GONE);
+                //findViewById(R.id.enable_stop_button).setVisibility(View.VISIBLE);
                 stopButton.setEnabled(true);
                 runingButton.setVisibility(View.INVISIBLE);
                 runingButton.setEnabled(false);
@@ -170,6 +171,8 @@ public class ChooseRun extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 runingButton.setVisibility(View.VISIBLE);
+                //findViewById(R.id.enable_run_button).setVisibility(View.VISIBLE);
+                //findViewById(R.id.enable_stop_button).setVisibility(View.GONE);
                 runingButton.setEnabled(true);
                 stopButton.setVisibility(View.INVISIBLE);
                 stopButton.setEnabled(false);
@@ -202,6 +205,20 @@ public class ChooseRun extends AppCompatActivity {
 
     }
 
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+
+        TextView textView = new TextView(this);
+        textView.setText(title);
+        textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        textView.setGravity(Gravity.CENTER_HORIZONTAL);
+        textView.setTextSize(20);
+        textView.setTextColor(Color.WHITE);
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setCustomView(textView);
+    }
+
     private void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
@@ -226,8 +243,6 @@ public class ChooseRun extends AppCompatActivity {
                                     mLocationCallback, Looper.myLooper());
                             Toast.makeText(ChooseRun.this,"Request Update", Toast.LENGTH_SHORT).show();
                         }
-
-                        updateUI();
                     }
                 })
 
@@ -255,8 +270,6 @@ public class ChooseRun extends AppCompatActivity {
                                 Toast.makeText(ChooseRun.this, errorMessage, Toast.LENGTH_LONG).show();
                                 mRequestingLocationUpdates = false;
                         }
-
-                        updateUI();
                     }
                 });
     }
@@ -326,8 +339,6 @@ public class ChooseRun extends AppCompatActivity {
                 distance += prev.distanceTo(curr);
                 prev = curr;
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                //Toast.makeText(ChooseRun.this,"Location Callback " + count++, Toast.LENGTH_SHORT).show();
-                updateUI();
             }
         };
     }
@@ -339,13 +350,6 @@ public class ChooseRun extends AppCompatActivity {
         skalar = (point1.getLongitude()-point2.getLongitude())*(point3.getLongitude()-point2.getLongitude())+
                 (point1.getLatitude()-point2.getLatitude())*(point3.getLatitude()-point2.getLatitude());
         return Math.toDegrees(Math.acos(skalar/(length1*length2)));
-    }
-
-    private void updateUI() {
-        if (mCurrentLocation != null) {
-            latTxt.setText(String.valueOf(mCurrentLocation.getLatitude()));
-            langTxt.setText(String.valueOf(mCurrentLocation.getLongitude()));
-        }
     }
 
     private void createLocationRequest() {
@@ -384,7 +388,6 @@ public class ChooseRun extends AppCompatActivity {
                     case Activity.RESULT_CANCELED:
                         Log.i(TAG, "User chose not to make required location settings changes.");
                         mRequestingLocationUpdates = false;
-                        updateUI();
                         break;
                 }
                 break;
@@ -401,8 +404,6 @@ public class ChooseRun extends AppCompatActivity {
         } else if (!checkPermissions()) {
             requestPermissions();
         }
-
-        updateUI();
     }
 
     private boolean checkPermissions() {
