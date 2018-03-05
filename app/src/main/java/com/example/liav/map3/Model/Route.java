@@ -22,14 +22,6 @@ public class Route {
 
     public Route(){}
 
-/*    public Route (Route r){
-        this.uid = r.uid;
-        this.routeTime = r.routeTime;
-        this.distance = r.distance;
-        this.latitudeList = r.latitudeList;
-        this.longitudeList = r.longitudeList;
-    }*/
-
     public Route (String id ,long time, float distance, List<Double> lat,List<Double> lon, Date date){
         this.uid=id;
         this.routeTime=time;
@@ -37,11 +29,6 @@ public class Route {
         this.latitudeList=lat;
         this.longitudeList=lon;
         this.date = date;
-      //  for (int i=0; i < cord.size(); i++){
-        //    Location temp = cord.get(i);
-        //    this.lat.add(temp.getLatitude());
-        //    this.lan.add(temp.getLongitude());
-       // }
     }
 
     public Date getDate() { return date; }

@@ -22,10 +22,12 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.liav.map3.Model.Route;
+import com.example.liav.map3.Model.User;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationCallback;
@@ -42,8 +44,12 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -53,7 +59,7 @@ import java.lang.Math;
 
 public class ChooseRun extends AppCompatActivity {
 
-    private Button runingButton , stopButton , showRoutes;
+    private Button runingButton , stopButton , showRoutes, addFriend;
 
     private  List<Location> locationsList;
 
@@ -116,6 +122,10 @@ public class ChooseRun extends AppCompatActivity {
         runingButton = findViewById(R.id.runButton);
         stopButton = findViewById(R.id.stopButton);
         showRoutes = findViewById(R.id.ShowRoutes);
+        addFriend = findViewById(R.id.AddFriend);
+
+        setPopUp();
+        setUser();
 
         mRequestingLocationUpdates = false;
 
@@ -124,6 +134,9 @@ public class ChooseRun extends AppCompatActivity {
 
         Routes = FirebaseDatabase.getInstance().getReference("Routes");
 
+        //String myEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+
+        //FirebaseDatabase.getInstance().getReference("Users").child(myEmail.replace(".",",")).setValue(FirebaseAuth.getInstance().getCurrentUser().getUid());
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
 
@@ -203,6 +216,41 @@ public class ChooseRun extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void setUser() {
+        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
+        Query a=userData.orderByChild("email").equalTo(currUserEmail);
+        a.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User curr_user = null;
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    curr_user = singleSnapshot.getValue(User.class);
+                }
+                if (curr_user == null){
+                    String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+                    DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users").child(currUserEmail);
+                    userData.setValue(new User (currUserEmail,FirebaseAuth.getInstance().getCurrentUser().getUid()));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void setPopUp() {
+        addFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(),AddFriend.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

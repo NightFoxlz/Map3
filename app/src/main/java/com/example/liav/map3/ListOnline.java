@@ -251,7 +251,7 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
                 for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
                 {
                     User user = postSnapshot.getValue(User.class);
-                    Log.d("Log",""+user.getEmail()+" is "+user.getStatus());
+                    Log.d("Log",""+user.getEmail()+" is "+user.getUid());
                 }
             }
 
