@@ -1,6 +1,7 @@
 package com.example.liav.map3;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,14 +9,19 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.liav.map3.Model.Route;
 import com.example.liav.map3.Model.User;
 import com.example.liav.map3.ViewHolders.ShowMyRoutsViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +33,7 @@ public class ShowMyRouts extends AppCompatActivity {
     //View
     RecyclerView routeList;
     RecyclerView.LayoutManager layoutManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +51,6 @@ public class ShowMyRouts extends AppCompatActivity {
         //firebase references
         routeRef = FirebaseDatabase.getInstance().getReference("Routes");
         myRouteRef = routeRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-
 
         updateList();
     }
@@ -72,6 +78,15 @@ public class ShowMyRouts extends AppCompatActivity {
                         map.putExtra("userUID",FirebaseAuth.getInstance().getCurrentUser().getUid());
                         map.putExtra("routUID",model.getUid());
                         startActivity(map);
+                    }
+                });
+
+                viewHolder.challenge.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent challange = new Intent(ShowMyRouts.this,friendsList.class);
+                        challange.putExtra("routeUID",model.getUid());
+                        startActivity(challange);
                     }
                 });
 

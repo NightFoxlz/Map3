@@ -49,9 +49,10 @@
             android:label="@string/title_activity_choose_run"
             android:theme="@style/AppTheme" />
         <activity android:name=".ShowMyRouts" />
-        <activity android:name=".AddFriend"
-            android:theme="@style/AppTheme.PopMe"
-            ></activity>
+        <activity
+            android:name=".AddFriend"
+            android:theme="@style/AppTheme.PopMe" />
+        <activity android:name=".friendsList" />
     </application>
 
 </manifest>

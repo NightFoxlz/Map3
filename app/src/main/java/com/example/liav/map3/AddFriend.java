@@ -92,17 +92,18 @@ public class AddFriend extends Activity {
                             displyError.setTextColor(Color.RED);
                         }
                         else{
-                            if (! target.addFriend(targetEmail,target.getUid())){
+                            if (! target.addFriend(currUserEmail,curr_user.getUid())){
                                 displyError.setText("Error: already friends");
                                 displyError.setTextColor(Color.RED);
                                 target = null;
                                 return;
                             }
-                            curr_user.addFriend(currUserEmail,curr_user.getUid());
+                            curr_user.addFriend(targetEmail,target.getUid());
                             userData.child(currUserEmail).setValue(curr_user);
                             userData.child(targetEmail).setValue(target);
                             displyError.setText("Success");
                             displyError.setTextColor(Color.GREEN);
+                            target = null;
                         }
                     }
 
@@ -125,7 +126,7 @@ public class AddFriend extends Activity {
         int width = dm.widthPixels;
         int height = dm.heightPixels;
 
-        getWindow().setLayout((int)(width*.8),(int)(height*.25));
+        getWindow().setLayout((int)(width*.8),(int)(height*.3));
 
         WindowManager.LayoutParams parm = getWindow().getAttributes();
         parm.gravity = Gravity.CENTER;
