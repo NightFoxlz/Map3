@@ -59,7 +59,7 @@ import java.lang.Math;
 
 public class ChooseRun extends AppCompatActivity {
 
-    private Button runingButton , stopButton , showRoutes, addFriend;
+    private Button runingButton , stopButton , showRoutes, addFriend, sentChallanges, recivedChallanges;
 
     private  List<Location> locationsList;
 
@@ -123,6 +123,8 @@ public class ChooseRun extends AppCompatActivity {
         stopButton = findViewById(R.id.stopButton);
         showRoutes = findViewById(R.id.ShowRoutes);
         addFriend = findViewById(R.id.AddFriend);
+        sentChallanges = findViewById(R.id.ShowSent);
+        recivedChallanges = findViewById(R.id.ShowRecived);
 
         setPopUp();
         setUser();
@@ -213,6 +215,24 @@ public class ChooseRun extends AppCompatActivity {
             public void onClick(View view) {
                 Intent showRout = new Intent ( ChooseRun.this,ShowMyRouts.class);
                 startActivity(showRout);
+            }
+        });
+
+        recivedChallanges.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent showRecived = new Intent(ChooseRun.this,recivedChallangesList.class );
+                showRecived.putExtra("choose",0);
+                startActivity(showRecived);
+            }
+        });
+
+        sentChallanges.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent showSent = new Intent(ChooseRun.this,recivedChallangesList.class );
+                showSent.putExtra("choose",1);
+                startActivity(showSent);
             }
         });
 

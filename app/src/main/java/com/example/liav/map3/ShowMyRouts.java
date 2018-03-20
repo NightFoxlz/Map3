@@ -64,12 +64,14 @@ public class ShowMyRouts extends AppCompatActivity {
         ) {
             @Override
             protected void populateViewHolder(ShowMyRoutsViewHolder viewHolder, final Route model, int position) {
-                viewHolder.date.setText(model.getDate().toString());
-                viewHolder.dist.setText(Float.toString(model.getDistance()) + " m");
+                String date = model.getDate().toString();
+                date = date.substring(0,date.indexOf("GMT"));
+                viewHolder.date.setText("Date:            " + date);
+                viewHolder.dist.setText("Distance:    " + Integer.toString((int)model.getDistance()) + " m");
                 long secLong = model.getRouteTime();
                 int min = (int)secLong/60;
                 int sec = (int)secLong - min*60;
-                viewHolder.showTime.setText( min+ " min " +sec + " sec");
+                viewHolder.showTime.setText( "Time:           " + min+ " min " +sec + " sec");
 
                 viewHolder.showMap.setOnClickListener(new View.OnClickListener() {
                     @Override

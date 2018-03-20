@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardElevation="10dp"
-    android:layout_margin="16dp">
+    android:layout_margin="16dp"
+    >
 
     <LinearLayout
         android:weightSum="10"
@@ -15,33 +16,47 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/DateText"
+            android:id="@+id/ChallengerText"
             android:layout_width="match_parent"
-            android:textStyle="bold"
             android:layout_height="35dp"
-            android:text="Date:" />
+            android:textStyle="bold"
+            android:text="Challanger:" />
+
+        <TextView
+            android:id="@+id/ChallengeeText"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:textStyle="bold"
+            android:text="Challangee:" />
 
         <TextView
             android:id="@+id/DistText"
             android:layout_width="match_parent"
-            android:textStyle="bold"
             android:layout_height="35dp"
+            android:textStyle="bold"
             android:text="Dist:"/>
 
         <TextView
             android:id="@+id/TimeText"
             android:layout_width="match_parent"
-            android:textStyle="bold"
             android:layout_height="35dp"
+            android:textStyle="bold"
             android:text="Time:"/>
 
-    <LinearLayout
-        android:weightSum="10"
-        android:padding="0dp"
-        android:orientation="horizontal"
-        android:layout_gravity="center_vertical"
-        android:layout_width="match_parent"
-        android:layout_height="43dp">
+        <TextView
+            android:id="@+id/WinnerText"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:textStyle="bold"
+            android:text="Winner:"/>
+
+        <LinearLayout
+            android:weightSum="10"
+            android:padding="0dp"
+            android:orientation="horizontal"
+            android:layout_gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="43dp">
 
             <Button
                 android:id="@+id/ShowMap"
@@ -51,12 +66,12 @@
                 android:text="@string/show_map"/>
 
             <Button
-                android:id="@+id/Challenge"
+                android:id="@+id/Improve"
                 android:layout_width="140dp"
                 android:layout_height="38dp"
                 android:background="@drawable/roundbuttongrey"
                 android:layout_marginStart="8dp"
-                android:text="@string/challenge" />
+                android:text="Improve" />
         </LinearLayout>
 
     </LinearLayout>

@@ -74,7 +74,7 @@ public class User {
     public boolean addSentChallange (Challange c){
         for (int i=0; i< this.sentChallanges.size(); i++){
             if (this.sentChallanges.get(i).getRouteUID().equals(c.getRouteUID()) &&
-                    this.sentChallanges.get(i).getChallengeUID().equals(c.getChallengeUID())) return false;
+                    this.sentChallanges.get(i).getChallengeMail().equals(c.getChallengeMail())) return false;
         }
         this.sentChallanges.add(c);
         return true;

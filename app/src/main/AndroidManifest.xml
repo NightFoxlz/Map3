@@ -53,6 +53,8 @@
             android:name=".AddFriend"
             android:theme="@style/AppTheme.PopMe" />
         <activity android:name=".friendsList" />
+        <activity android:name=".recivedChallangesList" />
+        <activity android:name=".Improve"></activity>
     </application>
 
 </manifest>

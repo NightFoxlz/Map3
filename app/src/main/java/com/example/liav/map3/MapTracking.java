@@ -108,7 +108,7 @@ public class MapTracking extends FragmentActivity implements OnMapReadyCallback 
                 prev_latlng = curr_latlng;
             }
             //trying to focus map on the track
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prev_latlng,13));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(prev_latlng,16));
         }
 
 

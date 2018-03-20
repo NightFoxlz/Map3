@@ -27,7 +27,6 @@ import com.google.firebase.database.ValueEventListener;
 public class friendsList extends AppCompatActivity {
     
     DatabaseReference userRef , currUserRef, userData;
-    //FirebaseRecyclerAdapter<Route,ShowMyRoutsViewHolder> adapter;
 
     //View
     RecyclerView friendList;
@@ -118,7 +117,7 @@ public class friendsList extends AppCompatActivity {
                     Toast.makeText(friendsList.this,"Error fetching target data", Toast.LENGTH_SHORT).show();
                 }
                 else{
-                    Challange c = new Challange(curr_route.getUid(),curr_user.getEmail(),target.getEmail(),
+                    Challange c = new Challange(curr_route.getUid(),curr_user.getUid(), curr_user.getEmail(),target.getEmail(),
                                                 curr_route.getRouteTime(),curr_route.getDistance());
                     if (! target.addRecivedChallange(c)){
                         Toast.makeText(friendsList.this,"Error : Challange already exists", Toast.LENGTH_SHORT).show();
