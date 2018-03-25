@@ -72,6 +72,13 @@ public class Route {
         return points;
     }
 
+    public Location firstPoint(){
+        Location l = new Location("");
+        l.setLatitude(latitudeList.get(0));
+        l.setLongitude(longitudeList.get(0));
+        return l;
+    }
+
 }
 
 

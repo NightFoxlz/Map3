@@ -96,4 +96,10 @@ public class recivedChallangesList extends AppCompatActivity {
         map.putExtra("routUID",routeUID);
         mContext.startActivity(map);
     }
+
+    public static void improveListener (Challange c){
+        Intent map = new Intent ( mContext,Improve.class);
+        map.putExtra("challange",c);
+        mContext.startActivity(map);
+    }
 }

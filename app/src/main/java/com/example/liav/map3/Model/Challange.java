@@ -1,10 +1,12 @@
 package com.example.liav.map3.Model;
 
+import java.io.Serializable;
+
 /**
  * Created by Liav on 3/7/2018.
  */
 
-public class Challange {
+public class Challange implements Serializable {
     private int winner;
     private String routeUID;
     private String challengerEmail;

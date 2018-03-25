@@ -72,6 +72,12 @@ public class ChallangeRecyclerAdapter extends RecyclerView.Adapter<ChallangeRecy
                 com.example.liav.map3.recivedChallangesList.requestShowMap(challange.getChallengerUID(),challange.getRouteUID());
             }
         });
+        holder.improve.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                com.example.liav.map3.recivedChallangesList.improveListener(challange);
+            }
+        });
     }
 
     @Override
