@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.example.liav.map3.Model.Challange;
 import com.example.liav.map3.Model.Route;
+import com.example.liav.map3.Model.User;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -51,6 +52,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import static java.lang.System.exit;
+import java.lang.Math;
 
 public class Improve extends AppCompatActivity {
     TextView challanger , challangee, dist, time, winner, distError;
@@ -82,7 +84,15 @@ public class Improve extends AppCompatActivity {
 
     private Challange c;
 
-    private Location startingPoint;
+    private Location startingPoint, endPoint;
+
+    private double freeCoef, xCoef;
+
+    private int currPoint;
+
+    private Date startDate, endDate;
+
+    User curr_user, targetUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +106,7 @@ public class Improve extends AppCompatActivity {
         c = (Challange) getIntent().getSerializableExtra("challange");
         initializeView();
         getRoute();
+        getUser();
         setShowMap();
         setNavButton();
         createLocationCallback();
@@ -113,7 +124,51 @@ public class Improve extends AppCompatActivity {
         currentlyRunning = false;
         distOk = false;
         startRun.setEnabled(false);
+        startAndStopClick();
         startLocationUpdates();
+    }
+
+    private void startAndStopClick() {
+        startRun.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentlyRunning = true;
+                startDate = new Date();
+                stopRun.setVisibility(View.VISIBLE);
+                //findViewById(R.id.enable_run_button).setVisibility(View.GONE);
+                //findViewById(R.id.enable_stop_button).setVisibility(View.VISIBLE);
+                stopRun.setEnabled(true);
+                startRun.setVisibility(View.INVISIBLE);
+                startRun.setEnabled(false);
+                currPoint = 0;
+                updateCoefs();
+            }
+        });
+        stopRun.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                currentlyRunning = false;
+                startRun.setVisibility(View.VISIBLE);
+                //findViewById(R.id.enable_run_button).setVisibility(View.GONE);
+                //findViewById(R.id.enable_stop_button).setVisibility(View.VISIBLE);
+                startRun.setEnabled(true);
+                stopRun.setVisibility(View.INVISIBLE);
+                stopRun.setEnabled(false);
+                distOk = false;
+                startRun.setEnabled(false);
+                startRun.setBackgroundResource(R.drawable.startrungrayed);
+                distError.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void updateCoefs() {
+        double x1 = route.getLongitudeList().get(currPoint);
+        double y1 = route.getLatitudeList().get(currPoint);
+        double x2 = route.getLongitudeList().get(++currPoint);
+        double y2 = route.getLatitudeList().get(currPoint);
+        xCoef = (y2 - y1) / (x2 - x1);
+        freeCoef = y1 - x1 * xCoef;
     }
 
     private void setShowMap() {
@@ -125,6 +180,25 @@ public class Improve extends AppCompatActivity {
                 map.putExtra("routUID",c.getRouteUID());
                 stopLocationUpdates();
                 startActivity(map);
+            }
+        });
+    }
+
+    private void getUser() {
+        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
+        Query a=userData.orderByChild("email").equalTo(currUserEmail);
+        a.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    curr_user = singleSnapshot.getValue(User.class);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
     }
@@ -216,6 +290,7 @@ public class Improve extends AppCompatActivity {
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()){
                     route = singleSnapshot.getValue(Route.class);
                     startingPoint = route.firstPoint();
+                    endPoint = route.lastPoint();
                 }
                 if (route == null){
                     Toast.makeText(Improve.this,"Error", Toast.LENGTH_SHORT).show();
@@ -300,6 +375,36 @@ public class Improve extends AppCompatActivity {
                         distError.setVisibility(View.VISIBLE);
                     }
                 }
+                else {
+                    double dist = calcDist(mCurrentLocation.getLongitude(),mCurrentLocation.getLatitude());
+                    if (dist < 10){
+                        if (currPoint == route.getLatitudeList().size()-1 && mCurrentLocation.distanceTo(endPoint) < 10)
+                        {
+                            currentlyRunning = false;
+                            endDate = new Date();
+                            getCurrentResults();
+                        }
+                    }
+                    else {
+                        if (currPoint != route.getLatitudeList().size()-1) {
+                            updateCoefs();
+                            dist = calcDist(mCurrentLocation.getLongitude(), mCurrentLocation.getLatitude());
+                            if (dist < 10) {
+                                //////// ok cont
+                            } else {
+                                ////////// failed
+                            }
+                        }
+                        else {
+                            if (mCurrentLocation.distanceTo(endPoint) < 10){
+                                ///////// ok - finish
+                            }
+                            else{
+                                ////////// failed
+                            }
+                        }
+                    }
+                }
 /*
                 if (locationsList.isEmpty()){
                     startDate = new Date();
@@ -346,6 +451,33 @@ public class Improve extends AppCompatActivity {
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());*/
             }
         };
+    }
+
+    private void getCurrentResults() {
+        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        final String targetEmail;
+        if (c.getChallengeMail() == currUserEmail) targetEmail = c.getChallengerMail();
+        else targetEmail = c.getChallengeMail();
+        DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
+        Query a=userData.orderByChild("email").equalTo(targetEmail);
+        a.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    targetUser = singleSnapshot.getValue(User.class);
+                    if (targetEmail == c.getChallengerMail()) ;
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private double calcDist(double x, double y) {
+        return Math.abs((xCoef * x - y + freeCoef) / Math.sqrt(Math.pow(xCoef, 2) + 1));
     }
 
     private void createLocationRequest() {

@@ -164,6 +164,7 @@ public class ChooseRun extends AppCompatActivity {
                 //startActivity(intent);
                 count =1; skiped = 0;
                 point1 = null; point2 = null; point3 = null;
+                startDate = new Date();
                 locationsList.clear();
                 currUserRoutes = Routes.child(FirebaseAuth.getInstance().getCurrentUser().getUid());
                 currRoute = currUserRoutes.push();
@@ -365,7 +366,6 @@ public class ChooseRun extends AppCompatActivity {
 
                 mCurrentLocation = locationResult.getLastLocation();
                 if (locationsList.isEmpty()){
-                    startDate = new Date();
                     endDate = new Date();
                     prev = new Location("");
                     prev.setLatitude(mCurrentLocation.getLatitude());
