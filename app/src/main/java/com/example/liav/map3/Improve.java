@@ -2,6 +2,7 @@ package com.example.liav.map3;
 
 import android.*;
 import android.Manifest;
+import static com.google.maps.android.PolyUtil.distanceToLine;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -53,11 +54,14 @@ import java.util.Date;
 
 import static java.lang.System.exit;
 import java.lang.Math;
+import java.util.List;
 
 public class Improve extends AppCompatActivity {
     TextView challanger , challangee, dist, time, winner, distError;
     Button showMap, navigate, startRun, stopRun;
     Route route;
+
+    private final int DISTCHECK = 10;
 
     private boolean mRequestingLocationUpdates, currentlyRunning, distOk;
 
@@ -70,7 +74,7 @@ public class Improve extends AppCompatActivity {
     private LocationCallback mLocationCallback; // Callback for Location events.
     private Location mCurrentLocation; //Represents a geographical location.
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 8000;
 
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
@@ -82,11 +86,12 @@ public class Improve extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private Challange c;
+    private Challange c , sourceChallange, targetChallange;
 
     private Location startingPoint, endPoint;
 
-    private double freeCoef, xCoef;
+    private double freeCoef, xCoef ;
+    private LatLng p1 , p2;
 
     private int currPoint;
 
@@ -94,6 +99,7 @@ public class Improve extends AppCompatActivity {
 
     User curr_user, targetUser;
 
+    boolean is_user_challanger;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,6 +111,12 @@ public class Improve extends AppCompatActivity {
         }
         c = (Challange) getIntent().getSerializableExtra("challange");
         initializeView();
+        stopRun.setVisibility(View.INVISIBLE);
+        stopRun.setEnabled(false);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
         getRoute();
         getUser();
         setShowMap();
@@ -141,7 +153,7 @@ public class Improve extends AppCompatActivity {
                 startRun.setVisibility(View.INVISIBLE);
                 startRun.setEnabled(false);
                 currPoint = 0;
-                updateCoefs();
+                updateCoefs(null);
             }
         });
         stopRun.setOnClickListener(new View.OnClickListener() {
@@ -162,13 +174,27 @@ public class Improve extends AppCompatActivity {
         });
     }
 
-    private void updateCoefs() {
-        double x1 = route.getLongitudeList().get(currPoint);
+    private double updateCoefs(LatLng p) {
+        /*double x1 = route.getLongitudeList().get(currPoint);
         double y1 = route.getLatitudeList().get(currPoint);
-        double x2 = route.getLongitudeList().get(++currPoint);
+        currPoint++;
+        double x2 = route.getLongitudeList().get(currPoint);
         double y2 = route.getLatitudeList().get(currPoint);
         xCoef = (y2 - y1) / (x2 - x1);
-        freeCoef = y1 - x1 * xCoef;
+        freeCoef = y1 - x1 * xCoef;*/
+        p1 = new LatLng(route.getLatitudeList().get(currPoint),route.getLongitudeList().get(currPoint));
+        currPoint++;
+        p2 = new LatLng(route.getLatitudeList().get(currPoint),route.getLongitudeList().get(currPoint));
+        if (p == null) return 0;
+        double dist = distanceToLine(p, p1, p2);
+        while (dist > DISTCHECK && currPoint != route.getLatitudeList().size()-1){
+            p1 = new LatLng(route.getLatitudeList().get(currPoint),route.getLongitudeList().get(currPoint));
+            currPoint++;
+            p2 = new LatLng(route.getLatitudeList().get(currPoint),route.getLongitudeList().get(currPoint));
+            dist = distanceToLine(p, p1, p2);
+        }
+        if (dist <= DISTCHECK) return dist;
+        else return -1;
     }
 
     private void setShowMap() {
@@ -341,12 +367,6 @@ public class Improve extends AppCompatActivity {
             winner.setText("Winner: " + c.getChallengerMail());
         }
         else winner.setText("Winner: " + c.getChallengeMail());
-        stopRun.setVisibility(View.INVISIBLE);
-        stopRun.setEnabled(false);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mSettingsClient = LocationServices.getSettingsClient(this);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mSettingsClient = LocationServices.getSettingsClient(this);
     }
 
     private void createLocationCallback() {
@@ -356,19 +376,19 @@ public class Improve extends AppCompatActivity {
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 mCurrentLocation = locationResult.getLastLocation();
-                Toast.makeText(Improve.this,"Location Callback ", Toast.LENGTH_SHORT).show();
                 if (!currentlyRunning){
                     if (startingPoint == null) {
                         Toast.makeText(Improve.this,"P is null ", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (!distOk && startingPoint.distanceTo(mCurrentLocation) <= 10){
+                    Toast.makeText(Improve.this,"Dist is " + startingPoint.distanceTo(mCurrentLocation), Toast.LENGTH_SHORT).show();
+                    if (!distOk && startingPoint.distanceTo(mCurrentLocation) <= DISTCHECK){
                         distOk = true;
                         startRun.setEnabled(true);
                         startRun.setBackgroundResource(R.drawable.startrunshape);
                         distError.setVisibility(View.INVISIBLE);
                     }
-                    else if (distOk && startingPoint.distanceTo(mCurrentLocation) > 10){
+                    else if (distOk && startingPoint.distanceTo(mCurrentLocation) > DISTCHECK){
                         distOk = false;
                         startRun.setEnabled(false);
                         startRun.setBackgroundResource(R.drawable.startrungrayed);
@@ -376,31 +396,77 @@ public class Improve extends AppCompatActivity {
                     }
                 }
                 else {
-                    double dist = calcDist(mCurrentLocation.getLongitude(),mCurrentLocation.getLatitude());
-                    if (dist < 10){
-                        if (currPoint == route.getLatitudeList().size()-1 && mCurrentLocation.distanceTo(endPoint) < 10)
+                    //double dist = calcDist(mCurrentLocation.getLongitude(),mCurrentLocation.getLatitude());
+                    LatLng p = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+                    double dist = distanceToLine(p, p1, p2);
+                    Toast.makeText(Improve.this,"Dist is " + dist + " in point " + currPoint, Toast.LENGTH_SHORT).show();
+                    if (dist < DISTCHECK){
+                        if ((currPoint == (route.getLatitudeList().size() - 1)) && (mCurrentLocation.distanceTo(endPoint) < DISTCHECK))
                         {
                             currentlyRunning = false;
                             endDate = new Date();
+                            Toast.makeText(Improve.this,"Fetching updated data", Toast.LENGTH_SHORT).show();
                             getCurrentResults();
+                            distOk = false;
+                            startRun.setEnabled(false);
+                            startRun.setBackgroundResource(R.drawable.startrungrayed);
+                            distError.setVisibility(View.VISIBLE);
+                            stopRun.setVisibility(View.INVISIBLE);
+                            stopRun.setEnabled(false);
                         }
                     }
                     else {
                         if (currPoint != route.getLatitudeList().size()-1) {
-                            updateCoefs();
-                            dist = calcDist(mCurrentLocation.getLongitude(), mCurrentLocation.getLatitude());
-                            if (dist < 10) {
-                                //////// ok cont
-                            } else {
-                                ////////// failed
+                            dist = updateCoefs(p);
+                            Toast.makeText(Improve.this,"Updated coeefs, Dist is " + dist + " in point " + currPoint, Toast.LENGTH_SHORT).show();
+                            if (dist != -1 && dist < DISTCHECK) {
+                                if ((currPoint == (route.getLatitudeList().size() - 1)) && (mCurrentLocation.distanceTo(endPoint) < DISTCHECK))
+                                {
+                                    currentlyRunning = false;
+                                    endDate = new Date();
+                                    Toast.makeText(Improve.this,"Fetching updated data", Toast.LENGTH_SHORT).show();
+                                    getCurrentResults();
+                                    distOk = false;
+                                    startRun.setEnabled(false);
+                                    startRun.setBackgroundResource(R.drawable.startrungrayed);
+                                    distError.setVisibility(View.VISIBLE);
+                                    stopRun.setVisibility(View.INVISIBLE);
+                                    stopRun.setEnabled(false);
+                                }
+                            }
+                            else {
+                                Toast.makeText(Improve.this,"You've gone off course", Toast.LENGTH_SHORT).show();
+                                currentlyRunning = false;
+                                distOk = false;
+                                startRun.setEnabled(false);
+                                startRun.setBackgroundResource(R.drawable.startrungrayed);
+                                distError.setVisibility(View.VISIBLE);
+                                stopRun.setVisibility(View.INVISIBLE);
+                                stopRun.setEnabled(false);
                             }
                         }
                         else {
-                            if (mCurrentLocation.distanceTo(endPoint) < 10){
-                                ///////// ok - finish
+                            if (mCurrentLocation.distanceTo(endPoint) < DISTCHECK){
+                                currentlyRunning = false;
+                                endDate = new Date();
+                                Toast.makeText(Improve.this,"Fetching updated data", Toast.LENGTH_SHORT).show();
+                                getCurrentResults();
+                                distOk = false;
+                                startRun.setEnabled(false);
+                                startRun.setBackgroundResource(R.drawable.startrungrayed);
+                                distError.setVisibility(View.VISIBLE);
+                                stopRun.setVisibility(View.INVISIBLE);
+                                stopRun.setEnabled(false);
                             }
                             else{
-                                ////////// failed
+                                Toast.makeText(Improve.this,"You've gone off course", Toast.LENGTH_SHORT).show();
+                                currentlyRunning = false;
+                                distOk = false;
+                                startRun.setEnabled(false);
+                                startRun.setBackgroundResource(R.drawable.startrungrayed);
+                                distError.setVisibility(View.VISIBLE);
+                                stopRun.setVisibility(View.INVISIBLE);
+                                stopRun.setEnabled(false);
                             }
                         }
                     }
@@ -454,19 +520,49 @@ public class Improve extends AppCompatActivity {
     }
 
     private void getCurrentResults() {
-        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        final String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
         final String targetEmail;
-        if (c.getChallengeMail() == currUserEmail) targetEmail = c.getChallengerMail();
-        else targetEmail = c.getChallengeMail();
+        if (c.getChallengeMail().equals(currUserEmail)) {
+            targetEmail = c.getChallengerMail();
+            is_user_challanger = false;
+            sourceChallange = getChallange(curr_user.getRecivedChallanges());
+        }
+        else {
+            targetEmail = c.getChallengeMail();
+            is_user_challanger = true;
+            sourceChallange = getChallange(curr_user.getSentChallanges());
+        }
         DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
         Query a=userData.orderByChild("email").equalTo(targetEmail);
         a.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                targetUser = null;
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
                     targetUser = singleSnapshot.getValue(User.class);
-                    if (targetEmail == c.getChallengerMail()) ;
                 }
+                if (targetUser == null){
+                    Toast.makeText(Improve.this,"Error unable to fetch opponent data ", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (is_user_challanger) targetChallange = getChallange(targetUser.getRecivedChallanges());
+                else targetChallange = getChallange(targetUser.getSentChallanges());
+                long timeRes = (endDate.getTime()-startDate.getTime())/1000;
+                if (targetChallange.getTime() > timeRes){
+                    Toast.makeText(Improve.this,"You've improved the result! Well done!", Toast.LENGTH_SHORT).show();
+                    targetChallange.setTime(timeRes);
+                    c.setTime(timeRes);
+                    sourceChallange.setTime(timeRes);
+                    int winner = 0;
+                    if (!is_user_challanger) winner = 1;
+                    targetChallange.setWinner(winner);
+                    c.setWinner(winner);
+                    sourceChallange.setWinner(winner);
+                    FirebaseDatabase.getInstance().getReference("Users").child(targetEmail).setValue(targetUser);
+                    FirebaseDatabase.getInstance().getReference("Users").child(currUserEmail).setValue(curr_user);
+                    initializeView();
+                }
+                else Toast.makeText(Improve.this,"Unfortunately you didn't improved the result. Better luck next time!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -476,9 +572,20 @@ public class Improve extends AppCompatActivity {
         });
     }
 
-    private double calcDist(double x, double y) {
-        return Math.abs((xCoef * x - y + freeCoef) / Math.sqrt(Math.pow(xCoef, 2) + 1));
+    private Challange getChallange(List<Challange> challangesList) {
+        for ( Challange challange : challangesList){
+            if (challange.getChallengeMail().equals(c.getChallengeMail()) && challange.getRouteUID().equals(c.getRouteUID()))
+                return challange;
+        }
+        return null;
     }
+
+    //private double calcDist(double x3, double y3) {
+        //return Math.abs((xCoef * x - y + freeCoef) / Math.sqrt(Math.pow(xCoef, 2) + 1));
+        //double xx = x2 - x1;
+        //double yy = y2 - y1;
+        //return ((xx * (x3 - x1)) + (yy * (y3 - y1))) / ((xx * xx) + (yy * yy));
+    //}
 
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();

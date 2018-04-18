@@ -75,7 +75,7 @@ public class ChooseRun extends AppCompatActivity {
 
     private Location point1, point2,point3;
 
-    private Boolean mRequestingLocationUpdates; //////////////////////////////////////////////////
+    private Boolean mRequestingLocationUpdates, isRunning; //////////////////////////////////////////////////
 
     private FusedLocationProviderClient mFusedLocationClient; //Provides access to the Fused Location Provider API.
     private SettingsClient mSettingsClient; // Provides access to the Location Settings API.
@@ -129,7 +129,7 @@ public class ChooseRun extends AppCompatActivity {
         setPopUp();
         setUser();
 
-        mRequestingLocationUpdates = false;
+        mRequestingLocationUpdates = true;
 
         stopButton.setVisibility(View.INVISIBLE);
         stopButton.setEnabled(false);
@@ -156,6 +156,8 @@ public class ChooseRun extends AppCompatActivity {
                     Manifest.permission.ACCESS_FINE_LOCATION
             } , MY_PREMMISION_REQUEST_CODE);
         }
+        isRunning = false;
+        startLocationUpdates();
 
         runingButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,9 +179,13 @@ public class ChooseRun extends AppCompatActivity {
                 runingButton.setVisibility(View.INVISIBLE);
                 runingButton.setEnabled(false);
                 mRequestingLocationUpdates = true;
+                showRoutes.setEnabled(false);
+                sentChallanges.setEnabled(false);
+                recivedChallanges.setEnabled(false);
+                addFriend.setEnabled(false);
 
-
-                startLocationUpdates();
+                isRunning = true;
+                //startLocationUpdates();
             }
         });
 
@@ -187,12 +193,13 @@ public class ChooseRun extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 runingButton.setVisibility(View.VISIBLE);
+                isRunning = false;
+                stopLocationUpdates();
                 //findViewById(R.id.enable_run_button).setVisibility(View.VISIBLE);
                 //findViewById(R.id.enable_stop_button).setVisibility(View.GONE);
                 runingButton.setEnabled(true);
                 stopButton.setVisibility(View.INVISIBLE);
                 stopButton.setEnabled(false);
-                stopLocationUpdates();
                 if (point2 != null) locationsList.add(point2);
                 Toast.makeText(ChooseRun.this,"Skipped " + skiped + " out of " + count, Toast.LENGTH_SHORT).show();
                 List<Double> lat = new ArrayList<Double>();
@@ -203,10 +210,14 @@ public class ChooseRun extends AppCompatActivity {
                 }
                 Route temp = new Route(routeUID,(endDate.getTime()-startDate.getTime())/1000,distance,lat,lon, new Date());
                 currRoute.setValue(temp); //currRoute is a database reference
-                mRequestingLocationUpdates = false;
+                mRequestingLocationUpdates = true;
                 Intent map = new Intent ( ChooseRun.this,MapTracking.class);
                 map.putExtra("userUID",FirebaseAuth.getInstance().getCurrentUser().getUid());
                 map.putExtra("routUID",routeUID);
+                showRoutes.setEnabled(true);
+                sentChallanges.setEnabled(true);
+                recivedChallanges.setEnabled(true);
+                addFriend.setEnabled(true);
                 startActivity(map);
             }
         });
@@ -215,6 +226,8 @@ public class ChooseRun extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent showRout = new Intent ( ChooseRun.this,ShowMyRouts.class);
+                isRunning = false;
+                stopLocationUpdates();
                 startActivity(showRout);
             }
         });
@@ -224,6 +237,8 @@ public class ChooseRun extends AppCompatActivity {
             public void onClick(View view) {
                 Intent showRecived = new Intent(ChooseRun.this,recivedChallangesList.class );
                 showRecived.putExtra("choose",0);
+                isRunning = false;
+                stopLocationUpdates();
                 startActivity(showRecived);
             }
         });
@@ -233,6 +248,8 @@ public class ChooseRun extends AppCompatActivity {
             public void onClick(View view) {
                 Intent showSent = new Intent(ChooseRun.this,recivedChallangesList.class );
                 showSent.putExtra("choose",1);
+                isRunning = false;
+                stopLocationUpdates();
                 startActivity(showSent);
             }
         });
@@ -365,6 +382,8 @@ public class ChooseRun extends AppCompatActivity {
                 super.onLocationResult(locationResult);
 
                 mCurrentLocation = locationResult.getLastLocation();
+                if (isRunning == false) return;
+
                 if (locationsList.isEmpty()){
                     endDate = new Date();
                     prev = new Location("");
@@ -388,7 +407,7 @@ public class ChooseRun extends AppCompatActivity {
                     }
                     else{
                         point3 = curr;
-                        if (calc_degre() < 160){
+                        if (calc_degre() < 175){
                             locationsList.add(point2);
                             point1 = point2;
                             point2 = point3;
@@ -465,9 +484,10 @@ public class ChooseRun extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        mRequestingLocationUpdates = true;
         // Within {@code onPause()}, we remove location updates. Here, we resume receiving
         // location updates if the user has requested them.
-        if (mRequestingLocationUpdates && checkPermissions()) {
+        if (checkPermissions()) {
             startLocationUpdates();
         } else if (!checkPermissions()) {
             requestPermissions();

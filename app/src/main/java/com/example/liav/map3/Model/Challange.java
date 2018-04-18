@@ -7,7 +7,7 @@ import java.io.Serializable;
  */
 
 public class Challange implements Serializable {
-    private int winner;
+    private int winner; // 0 - winner is challenger 1 - winner is challangee
     private String routeUID;
     private String challengerEmail;
     private String challangerUID;

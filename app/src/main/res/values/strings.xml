@@ -12,7 +12,7 @@
     <string name="show_map">Show map</string>
     <string name="challenge">Challenge</string>
     
-    <string name="dist_error">You need to be 10 meters or less from the starting point</string>
+    <string name="dist_error">You need to be 5 meters or less from the starting point</string>
 
     <string name="label_google_sign_in">Firebase + Google Sign In</string>
     <string name="desc_google_sign_in">Use a Google Sign In credential to authenticate with Firebase.</string>
