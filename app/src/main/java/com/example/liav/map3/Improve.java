@@ -14,6 +14,8 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -99,6 +101,8 @@ public class Improve extends AppCompatActivity {
 
     User curr_user, targetUser;
 
+    private MapFragHolder mapFrag;
+
     boolean is_user_challanger;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +114,7 @@ public class Improve extends AppCompatActivity {
             return;
         }
         c = (Challange) getIntent().getSerializableExtra("challange");
+        mapFrag = (MapFragHolder) getSupportFragmentManager().findFragmentById(R.id.Map_Try_Frag);
         initializeView();
         stopRun.setVisibility(View.INVISIBLE);
         stopRun.setEnabled(false);
@@ -317,6 +322,7 @@ public class Improve extends AppCompatActivity {
                     route = singleSnapshot.getValue(Route.class);
                     startingPoint = route.firstPoint();
                     endPoint = route.lastPoint();
+                    mapFrag.setRoute(route);
                 }
                 if (route == null){
                     Toast.makeText(Improve.this,"Error", Toast.LENGTH_SHORT).show();
@@ -376,6 +382,7 @@ public class Improve extends AppCompatActivity {
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 mCurrentLocation = locationResult.getLastLocation();
+                mapFrag.updateLocation(mCurrentLocation);
                 if (!currentlyRunning){
                     if (startingPoint == null) {
                         Toast.makeText(Improve.this,"P is null ", Toast.LENGTH_SHORT).show();

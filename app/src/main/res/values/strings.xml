@@ -9,9 +9,9 @@
         functionality.</string>
     <string name="settings">Settings</string>
 
-    <string name="show_map">Show map</string>
+    <string name="show_map">Show route</string>
     <string name="challenge">Challenge</string>
-    
+
     <string name="dist_error">You need to be 5 meters or less from the starting point</string>
 
     <string name="label_google_sign_in">Firebase + Google Sign In</string>

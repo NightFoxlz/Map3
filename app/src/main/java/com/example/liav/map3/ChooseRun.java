@@ -103,6 +103,8 @@ public class ChooseRun extends AppCompatActivity {
 
     private int count, skiped;
 
+    private MapFragHolder mapFrag;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,6 +127,7 @@ public class ChooseRun extends AppCompatActivity {
         addFriend = findViewById(R.id.AddFriend);
         sentChallanges = findViewById(R.id.ShowSent);
         recivedChallanges = findViewById(R.id.ShowRecived);
+        mapFrag = (MapFragHolder) getSupportFragmentManager().findFragmentById(R.id.Map_Try_Frag);
 
         setPopUp();
         setUser();
@@ -380,8 +383,12 @@ public class ChooseRun extends AppCompatActivity {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-
+                /*Date currDate;
+                Location prevLocation = mCurrentLocation;
+                double speed;*/
                 mCurrentLocation = locationResult.getLastLocation();
+                Toast.makeText(ChooseRun.this,"Speed is: " + mCurrentLocation.getSpeed(), Toast.LENGTH_SHORT).show();
+                mapFrag.updateLocation(mCurrentLocation);
                 if (isRunning == false) return;
 
                 if (locationsList.isEmpty()){
@@ -390,7 +397,10 @@ public class ChooseRun extends AppCompatActivity {
                     prev.setLatitude(mCurrentLocation.getLatitude());
                     prev.setLongitude(mCurrentLocation.getLongitude());
                 }
-                else endDate = new Date();
+                else {
+                    /*currDate = new Date();*/
+                    endDate =new Date();
+                }
 
                 curr = new Location("");
                 curr.setLatitude(mCurrentLocation.getLatitude());
@@ -398,12 +408,12 @@ public class ChooseRun extends AppCompatActivity {
                 if (point1 == null){
                     point1 = curr;
                     locationsList.add(curr);
-                    Toast.makeText(ChooseRun.this,"Location Callback point 1 is null " + count, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(ChooseRun.this,"Location Callback point 1 is null " + count, Toast.LENGTH_SHORT).show();
                 }
                 else{
                     if (point2 == null){
                         point2 = curr;
-                        Toast.makeText(ChooseRun.this,"Location Callback point 2 is null " + count, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(ChooseRun.this,"Location Callback point 2 is null " + count, Toast.LENGTH_SHORT).show();
                     }
                     else{
                         point3 = curr;
@@ -412,13 +422,13 @@ public class ChooseRun extends AppCompatActivity {
                             point1 = point2;
                             point2 = point3;
                             point3 = null;
-                            Toast.makeText(ChooseRun.this,"Location Callback " + count, Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(ChooseRun.this,"Location Callback " + count, Toast.LENGTH_SHORT).show();
                         }
                         else{
                             point2 = point3;
                             point3 = null;
                             skiped++;
-                            Toast.makeText(ChooseRun.this,"Location Callback Skipped " + skiped, Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(ChooseRun.this,"Location Callback Skipped " + skiped, Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
