@@ -27,6 +27,7 @@ import android.widget.Toast;
 import com.example.liav.map3.Model.Challange;
 import com.example.liav.map3.Model.Route;
 import com.example.liav.map3.Model.User;
+import com.example.liav.map3.Model.UserSpeed;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -95,15 +96,22 @@ public class Improve extends AppCompatActivity {
     private double freeCoef, xCoef ;
     private LatLng p1 , p2;
 
+    private DatabaseReference Speeds;
+
     private int currPoint;
 
-    private Date startDate, endDate;
+    private Date startDate, endDate, lastSpeedAnnouncedDate, lastSpeedUpload;
 
-    User curr_user, targetUser;
+    private User curr_user, targetUser;
 
     private MapFragHolder mapFrag;
 
-    boolean is_user_challanger;
+    private boolean is_user_challanger;
+
+    private ValueEventListener speedHandler;
+
+    private String currUserEmail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,6 +130,7 @@ public class Improve extends AppCompatActivity {
         mSettingsClient = LocationServices.getSettingsClient(this);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
+        Speeds = FirebaseDatabase.getInstance().getReference("Speeds");
         getRoute();
         getUser();
         setShowMap();
@@ -143,6 +152,42 @@ public class Improve extends AppCompatActivity {
         startRun.setEnabled(false);
         startAndStopClick();
         startLocationUpdates();
+
+        speedHandler = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (currentlyRunning == false) return;
+                Date temp = new Date();
+                if ((temp.getTime() - lastSpeedAnnouncedDate.getTime())/1000 < 5 || mCurrentLocation == null)
+                    return;
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    UserSpeed compSpeed = singleSnapshot.getValue(UserSpeed.class);
+                    if (compSpeed.getSpeed() > mCurrentLocation.getSpeed()){
+                        lastSpeedAnnouncedDate = new Date();
+                        Toast.makeText(Improve.this,compSpeed.getEmail() + " is running faster", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+    }
+
+    private void setSpeedListeners() {
+        for (final String email : curr_user.getFriendList()){
+            Query a=Speeds.orderByChild("email").equalTo(email);
+            a.addValueEventListener(speedHandler);
+        }
+    }
+
+    private void removeSpeedListeners(){
+        for (final String email : curr_user.getFriendList()){
+            Query a=Speeds.orderByChild("email").equalTo(email);
+            a.removeEventListener(speedHandler);
+        }
     }
 
     private void startAndStopClick() {
@@ -151,6 +196,9 @@ public class Improve extends AppCompatActivity {
             public void onClick(View view) {
                 currentlyRunning = true;
                 startDate = new Date();
+                lastSpeedAnnouncedDate = new Date();
+                lastSpeedUpload = new Date();
+                setSpeedListeners();
                 stopRun.setVisibility(View.VISIBLE);
                 //findViewById(R.id.enable_run_button).setVisibility(View.GONE);
                 //findViewById(R.id.enable_stop_button).setVisibility(View.VISIBLE);
@@ -172,6 +220,8 @@ public class Improve extends AppCompatActivity {
                 stopRun.setVisibility(View.INVISIBLE);
                 stopRun.setEnabled(false);
                 distOk = false;
+                removeSpeedListeners();
+                Speeds.child(currUserEmail).removeValue();
                 startRun.setEnabled(false);
                 startRun.setBackgroundResource(R.drawable.startrungrayed);
                 distError.setVisibility(View.VISIBLE);
@@ -216,7 +266,7 @@ public class Improve extends AppCompatActivity {
     }
 
     private void getUser() {
-        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
         DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
         Query a=userData.orderByChild("email").equalTo(currUserEmail);
         a.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -403,6 +453,11 @@ public class Improve extends AppCompatActivity {
                     }
                 }
                 else {
+                    Date temp =new Date();
+                    if ((temp.getTime() - lastSpeedUpload.getTime())/1000 > 5){
+                        lastSpeedUpload = new Date();
+                        Speeds.child(currUserEmail).setValue(new UserSpeed(mCurrentLocation.getSpeed(),currUserEmail));
+                    }
                     //double dist = calcDist(mCurrentLocation.getLongitude(),mCurrentLocation.getLatitude());
                     LatLng p = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
                     double dist = distanceToLine(p, p1, p2);
@@ -416,6 +471,8 @@ public class Improve extends AppCompatActivity {
                             getCurrentResults();
                             distOk = false;
                             startRun.setEnabled(false);
+                            removeSpeedListeners();
+                            Speeds.child(currUserEmail).removeValue();
                             startRun.setBackgroundResource(R.drawable.startrungrayed);
                             distError.setVisibility(View.VISIBLE);
                             stopRun.setVisibility(View.INVISIBLE);
@@ -434,6 +491,8 @@ public class Improve extends AppCompatActivity {
                                     Toast.makeText(Improve.this,"Fetching updated data", Toast.LENGTH_SHORT).show();
                                     getCurrentResults();
                                     distOk = false;
+                                    removeSpeedListeners();
+                                    Speeds.child(currUserEmail).removeValue();
                                     startRun.setEnabled(false);
                                     startRun.setBackgroundResource(R.drawable.startrungrayed);
                                     distError.setVisibility(View.VISIBLE);
@@ -445,6 +504,8 @@ public class Improve extends AppCompatActivity {
                                 Toast.makeText(Improve.this,"You've gone off course", Toast.LENGTH_SHORT).show();
                                 currentlyRunning = false;
                                 distOk = false;
+                                removeSpeedListeners();
+                                Speeds.child(currUserEmail).removeValue();
                                 startRun.setEnabled(false);
                                 startRun.setBackgroundResource(R.drawable.startrungrayed);
                                 distError.setVisibility(View.VISIBLE);
@@ -458,6 +519,8 @@ public class Improve extends AppCompatActivity {
                                 endDate = new Date();
                                 Toast.makeText(Improve.this,"Fetching updated data", Toast.LENGTH_SHORT).show();
                                 getCurrentResults();
+                                removeSpeedListeners();
+                                Speeds.child(currUserEmail).removeValue();
                                 distOk = false;
                                 startRun.setEnabled(false);
                                 startRun.setBackgroundResource(R.drawable.startrungrayed);
@@ -469,6 +532,8 @@ public class Improve extends AppCompatActivity {
                                 Toast.makeText(Improve.this,"You've gone off course", Toast.LENGTH_SHORT).show();
                                 currentlyRunning = false;
                                 distOk = false;
+                                removeSpeedListeners();
+                                Speeds.child(currUserEmail).removeValue();
                                 startRun.setEnabled(false);
                                 startRun.setBackgroundResource(R.drawable.startrungrayed);
                                 distError.setVisibility(View.VISIBLE);

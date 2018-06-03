@@ -1,3 +1,4 @@
+/*
 package com.example.liav.map3;
 
 import android.Manifest;
@@ -345,3 +346,4 @@ public class ListOnline extends AppCompatActivity implements  GoogleApiClient.Co
 }
 
 
+*/

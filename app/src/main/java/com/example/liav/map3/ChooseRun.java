@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 
 import com.example.liav.map3.Model.Route;
 import com.example.liav.map3.Model.User;
+import com.example.liav.map3.Model.UserSpeed;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationCallback;
@@ -63,11 +65,11 @@ public class ChooseRun extends AppCompatActivity {
 
     private  List<Location> locationsList;
 
-    private DatabaseReference Routes, currUserRoutes, currRoute;
+    private DatabaseReference Routes, currUserRoutes, currRoute, Speeds;
 
     private String routeUID;
 
-    private Date startDate, endDate;
+    private Date startDate, endDate, lastSpeedAnnouncedDate, lastSpeedUpload;
 
     private float distance;
 
@@ -105,6 +107,12 @@ public class ChooseRun extends AppCompatActivity {
 
     private MapFragHolder mapFrag;
 
+    private User curr_user;
+    private String currUserEmail;
+
+    private ValueEventListener speedHandler;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,6 +146,7 @@ public class ChooseRun extends AppCompatActivity {
         stopButton.setEnabled(false);
 
         Routes = FirebaseDatabase.getInstance().getReference("Routes");
+        Speeds = FirebaseDatabase.getInstance().getReference("Speeds");
 
         //String myEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
@@ -186,7 +195,9 @@ public class ChooseRun extends AppCompatActivity {
                 sentChallanges.setEnabled(false);
                 recivedChallanges.setEnabled(false);
                 addFriend.setEnabled(false);
-
+                lastSpeedAnnouncedDate = new Date();
+                lastSpeedUpload = new Date();
+                setSpeedListeners();
                 isRunning = true;
                 //startLocationUpdates();
             }
@@ -198,6 +209,8 @@ public class ChooseRun extends AppCompatActivity {
                 runingButton.setVisibility(View.VISIBLE);
                 isRunning = false;
                 stopLocationUpdates();
+                removeSpeedListeners();
+                Speeds.child(currUserEmail).removeValue();
                 //findViewById(R.id.enable_run_button).setVisibility(View.VISIBLE);
                 //findViewById(R.id.enable_stop_button).setVisibility(View.GONE);
                 runingButton.setEnabled(true);
@@ -257,16 +270,52 @@ public class ChooseRun extends AppCompatActivity {
             }
         });
 
+        speedHandler = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (isRunning == false) return;
+                Date temp = new Date();
+                if ((temp.getTime() - lastSpeedAnnouncedDate.getTime())/1000 < 5 || mCurrentLocation == null)
+                    return;
+                for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    UserSpeed compSpeed = singleSnapshot.getValue(UserSpeed.class);
+                    if (compSpeed.getSpeed() > mCurrentLocation.getSpeed()){
+                        lastSpeedAnnouncedDate = new Date();
+                        Toast.makeText(ChooseRun.this,compSpeed.getEmail() + " is running faster", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+    }
+
+    private void setSpeedListeners() {
+        for (final String email : curr_user.getFriendList()){
+            Query a=Speeds.orderByChild("email").equalTo(email);
+            a.addValueEventListener(speedHandler);
+        }
+    }
+
+    private void removeSpeedListeners(){
+        for (final String email : curr_user.getFriendList()){
+            Query a=Speeds.orderByChild("email").equalTo(email);
+            a.removeEventListener(speedHandler);
+        }
     }
 
     private void setUser() {
-        String currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
+        currUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace(".",",");
         DatabaseReference userData = FirebaseDatabase.getInstance().getReference("Users");
         Query a=userData.orderByChild("email").equalTo(currUserEmail);
         a.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                User curr_user = null;
+                curr_user = null;
                 for(DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
                     curr_user = singleSnapshot.getValue(User.class);
                 }
@@ -398,8 +447,12 @@ public class ChooseRun extends AppCompatActivity {
                     prev.setLongitude(mCurrentLocation.getLongitude());
                 }
                 else {
-                    /*currDate = new Date();*/
                     endDate =new Date();
+                }
+
+                if ((endDate.getTime() - lastSpeedUpload.getTime())/1000 > 5){
+                    lastSpeedUpload = new Date();
+                    Speeds.child(currUserEmail).setValue(new UserSpeed(mCurrentLocation.getSpeed(),currUserEmail));
                 }
 
                 curr = new Location("");
@@ -502,6 +555,21 @@ public class ChooseRun extends AppCompatActivity {
         } else if (!checkPermissions()) {
             requestPermissions();
         }
+    }
+
+
+
+    @Override
+    public void onBackPressed() {
+        stopLocationUpdates();
+        if (isRunning){
+            isRunning = false;
+            removeSpeedListeners();
+        }
+        Intent setIntent = new Intent(Intent.ACTION_MAIN);
+        setIntent.addCategory(Intent.CATEGORY_HOME);
+        setIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(setIntent);
     }
 
     private boolean checkPermissions() {
